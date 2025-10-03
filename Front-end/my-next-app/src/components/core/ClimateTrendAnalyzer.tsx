@@ -71,6 +71,8 @@ export const ClimateTrendAnalyzer: React.FC = () => {
     const [data, setData] = useState<ClimateData | null>(initialData);
     const [loading, setLoading] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [rawApiResponse, setRawApiResponse] = useState<any>(null); // Store raw API response
+
 
     const runAnalysis = useCallback((loc: string, dt: string, lat?: number, lon?: number) => {
         setLoading(true);
@@ -113,6 +115,8 @@ export const ClimateTrendAnalyzer: React.FC = () => {
             if (!res.ok) throw new Error(`API ${res.status}`);
             const response: ActivityResponse = await res.json();
             
+            setRawApiResponse(response);
+
             // Transform the activity endpoint response to ClimateData format
             const transformedData: ClimateData = {
                 location: loc,
@@ -125,6 +129,8 @@ export const ClimateTrendAnalyzer: React.FC = () => {
         })
         .catch((e) => {
             console.error('API call failed:', e);
+            setRawApiResponse(null); // Clear raw response on error
+
             // Fallback to dummy data
             setData({
                 ...initialData,
@@ -210,7 +216,11 @@ export const ClimateTrendAnalyzer: React.FC = () => {
                     <RiskGaugesPanel conditions={data.conditions} />
                     <ConditionCardsPanel conditions={data.conditions} />
                     <TrendGraph condition={data.conditions[0]} />
-                    <DownloadOptions location={data.location} date={data.date} />
+                    <DownloadOptions 
+                        location={data?.location || ''}
+                        date={data?.date || ''}
+                        apiResponse={rawApiResponse}  // Pass the raw API response
+                    />
                 </div>
             ) : (
                 <div className="text-center p-10 border-4 border-dashed border-gray-300 dark:border-gray-700 rounded-lg">
