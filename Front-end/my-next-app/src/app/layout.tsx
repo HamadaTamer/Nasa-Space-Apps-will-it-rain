@@ -1,7 +1,7 @@
 // src/app/layout.tsx
 
 import type { Metadata } from "next";
-import "./globals.css"; // Ensure this is present
+import "./globals.css";
 import Link from 'next/link';
 
 export const metadata: Metadata = {
@@ -34,13 +34,11 @@ export default function RootLayout({
                 </div>
               </Link>
 
-              {/* Desktop Navigation */}
+              {/* Desktop Navigation - UPDATED */}
               <nav className="hidden md:flex space-x-8">
                 <NavLink href="/">Home</NavLink>
                 <NavLink href="/dashboard">Dashboard</NavLink>
-                <NavLink href="/insights">Insights</NavLink>
                 <NavLink href="/about">About</NavLink>
-                <NavLink href="/help">Help</NavLink>
               </nav>
 
               {/* Mobile Menu Icon (Placeholder) */}
