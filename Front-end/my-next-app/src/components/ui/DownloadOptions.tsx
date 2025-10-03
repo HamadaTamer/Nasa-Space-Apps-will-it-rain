@@ -23,7 +23,7 @@ export const DownloadOptions: React.FC<DownloadOptionsProps> = ({ location, date
                     Data Export for Deep Analysis
                 </h3>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                    [cite_start]Advanced users may export the subset of data in CSV or JSON. [cite: 59]
+                    Advanced users may export the subset of data in CSV or JSON.
                 </p>
             </div>
             <div className="flex space-x-3">

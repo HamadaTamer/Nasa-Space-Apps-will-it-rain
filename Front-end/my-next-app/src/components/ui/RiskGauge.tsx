@@ -57,7 +57,7 @@ const RiskGauge: React.FC<{ name: string; probability: number }> = ({ name, prob
                 </div>
             </div>
             <p className="mt-3 text-sm font-semibold text-gray-700 dark:text-gray-300">{name}</p>
-            [cite_start]<p className="text-xs text-gray-500 dark:text-gray-400">Trend Adjusted Risk [cite: 55]</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">Trend Adjusted Risk </p>
         </div>
     );
 };

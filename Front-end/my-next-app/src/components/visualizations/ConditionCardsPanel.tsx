@@ -17,13 +17,13 @@ const ConditionCard: React.FC<{ condition: Condition }> = ({ condition }) => {
 
             <div className="space-y-2">
                 <p className="text-sm text-gray-700 dark:text-gray-300">
-                    [cite_start]<span className="font-semibold">Historical Baseline:</span> {condition.historical}% [cite: 9]
+                    <span className="font-semibold">Historical Baseline:</span> {condition.historical}%
                 </p>
                 <p className="text-sm text-gray-700 dark:text-gray-300">
-                    [cite_start]<span className="font-semibold text-blue-600 dark:text-blue-400">Trend-Adjusted:</span> {condition.trendAdjusted}% [cite: 9]
+                    <span className="font-semibold text-blue-600 dark:text-blue-400">Trend-Adjusted:</span> {condition.trendAdjusted}%
                 </p>
                 <p className="text-sm text-gray-700 dark:text-gray-300">
-                    [cite_start]<span className="font-semibold">ML Projection:</span> {condition.mlProjection}% (Optional) [cite: 9]
+                    <span className="font-semibold">ML Projection:</span> {condition.mlProjection}% (Optional)
                 </p>
             </div>
         </div>
@@ -33,7 +33,7 @@ const ConditionCard: React.FC<{ condition: Condition }> = ({ condition }) => {
 export const ConditionCardsPanel: React.FC<ConditionCardsPanelProps> = ({ conditions }) => {
     return (
         <div>
-            [cite_start]<h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-4">Condition Cards (Layered Insight) [cite: 56]</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-4">Condition Cards (Layered Insight)</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {conditions.map(c => (
                     <ConditionCard key={c.name} condition={c} />
