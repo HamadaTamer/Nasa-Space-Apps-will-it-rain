@@ -6,13 +6,11 @@ import { RiskGaugesPanel } from '../visualizations/RiskGaugesPanel';
 import { ConditionCardsPanel } from '../visualizations/ConditionCardsPanel';
 import { TrendGraph } from '../visualizations/TrendGraph';
 import { DownloadOptions } from '../ui/DownloadOptions';
+import { LocationModal } from '../ui/LocationModal'; // Import the Modal
 import { MagnifyingGlassIcon, MapPinIcon } from '@heroicons/react/24/outline';
 import { ClimateData, Condition } from '../../types/climate';
-import { useClimateParams } from '../../hooks/useClimateParams'; // New Hook Import
-import Link from 'next/link';
 
-// --- Dummy Data (Used as initial state) ---
-// ... (initialData definition remains the same) ...
+// --- Dummy Data ---
 const dummyConditions: Condition[] = [
     { name: 'Heavy Rain', historical: 22, trendAdjusted: 28, mlProjection: 30, icon: '🌧️' },
     { name: 'Extreme Heat', historical: 10, trendAdjusted: 15, mlProjection: 18, icon: '🔥' },
@@ -22,7 +20,7 @@ const dummyConditions: Condition[] = [
 const initialData: ClimateData = {
     location: 'Cairo, Egypt (30.0444, 31.2357)',
     date: 'July 15, 2026',
-    summary: 'On July 15 in Paris, the historical chance of heavy rain is 22% or the climate-adjusted probability is 28%, and the ML model projects 30%.',
+    summary: 'On July 15 in Cairo, the climate-adjusted chance of heavy rain is 28%, and extreme heat has a 15% adjusted probability.',
     conditions: dummyConditions,
 };
 // --------------------
@@ -30,13 +28,11 @@ const initialData: ClimateData = {
 
 export const ClimateTrendAnalyzer: React.FC = () => {
 
-    // Read location/date from URL query parameters (after map-picker redirects)
-    const { location: urlLocation, date: urlDate } = useClimateParams();
-
-    const [data, setData] = useState<ClimateData | null>(null); // Start with null data
+    const [data, setData] = useState<ClimateData | null>(initialData);
     const [loading, setLoading] = useState(false);
+    const [isModalOpen, setIsModalOpen] = useState(false); // Modal state
 
-    // Function to run the analysis (triggered on page load/URL change)
+    // Function to run the analysis
     const runAnalysis = useCallback((loc: string, dt: string) => {
         setLoading(true);
         // Simulate API call using current URL data
@@ -51,40 +47,29 @@ export const ClimateTrendAnalyzer: React.FC = () => {
         }, 1500);
     }, []);
 
-    // Effect to trigger analysis when URL parameters change
-    useEffect(() => {
-        if (urlLocation && urlDate) {
-            runAnalysis(urlLocation, urlDate);
-        }
-    }, [urlLocation, urlDate, runAnalysis]);
-
 
     // Custom 'Address Bar' now directs to the full-screen map picker
     const AddressBar = () => {
-        // Construct the URL to pass the current date to the picker
-        const pickerUrl = `/map-picker?date=${data?.date || urlDate}`;
-
         return (
             <div className="mb-8 p-4 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700">
-                <Link
-                    href={pickerUrl}
+                <button
+                    onClick={() => setIsModalOpen(true)}
                     className="flex items-center justify-between w-full text-left transition-colors"
                 >
                     <div className="flex items-center flex-grow min-w-0">
                         <MagnifyingGlassIcon className="w-5 h-5 mr-3 text-gray-500 dark:text-gray-400" />
                         <span className="truncate text-lg font-medium text-gray-800 dark:text-gray-200">
-                            Location: {data?.location || urlLocation}
+                            Location: {data?.location || "Select location to run analysis..."}
                         </span>
                     </div>
 
-                    <button
-                        type="button"
+                    <div
                         className="ml-4 p-2 rounded-full text-blue-600 bg-blue-100 dark:bg-blue-700/30 hover:bg-blue-200 dark:hover:bg-blue-700 transition-colors flex items-center shadow-md"
                         aria-label="Change Location and Date"
                     >
                         <MapPinIcon className="w-5 h-5" />
-                    </button>
-                </Link>
+                    </div>
+                </button>
             </div>
         );
     };
@@ -93,13 +78,12 @@ export const ClimateTrendAnalyzer: React.FC = () => {
     return (
         <div className="container mx-auto p-0">
 
-            {/* 1. Address Bar/Map Trigger */}
             <AddressBar />
 
-            {/* 2. Results Dashboard Section */}
+            {/* Results Dashboard Section */}
             {loading && (
                 <div className="text-center p-10">
-                    <p className="text-lg text-gray-600 dark:text-gray-400">Analyzing NASA data and running models for {urlLocation} on {urlDate}... 🛰️</p>
+                    <p className="text-lg text-gray-600 dark:text-gray-400">Analyzing NASA data... 🛰️</p>
                 </div>
             )}
 
@@ -118,6 +102,14 @@ export const ClimateTrendAnalyzer: React.FC = () => {
                     </p>
                 </div>
             )}
+
+            {/* The Modal Component */}
+            <LocationModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                onSearch={runAnalysis}
+                loading={loading}
+            />
         </div>
     );
 };
