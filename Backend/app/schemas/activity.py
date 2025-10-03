@@ -19,3 +19,4 @@ class ActivityPrediction(BaseModel):
 class ActivityResponse(BaseModel):
     inputs: ActivityRequest
     prediction: ActivityPrediction
+    analysis_summary: Optional[str] = None
