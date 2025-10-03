@@ -1,6 +1,6 @@
 // src/components/core/ClimateTrendAnalyzer.tsx
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { SummaryPanel } from '../visualizations/SummaryPanel';
 import { RiskGaugesPanel } from '../visualizations/RiskGaugesPanel';
 import { ConditionCardsPanel } from '../visualizations/ConditionCardsPanel';
@@ -72,6 +72,7 @@ export const ClimateTrendAnalyzer: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [rawApiResponse, setRawApiResponse] = useState<any>(null); // Store raw API response
+    const [activity, setActivity] = useState('outdoor activities'); // Default activity
 
 
     const runAnalysis = useCallback((loc: string, dt: string, lat?: number, lon?: number) => {
@@ -108,7 +109,7 @@ export const ClimateTrendAnalyzer: React.FC = () => {
                 date: isoDate,
                 lat: latitude,
                 lon: longitude,
-                activity: "outdoor"
+                activity: activity 
             })
         })
         .then(async (res) => {
@@ -140,7 +141,7 @@ export const ClimateTrendAnalyzer: React.FC = () => {
             });
         })
         .finally(() => setLoading(false));
-    }, []);
+    }, [activity]);
 
     // Helper function to generate summary from prediction
     const generateSummary = (prediction: ActivityPrediction, location: string, date: string): string => {
@@ -173,11 +174,35 @@ export const ClimateTrendAnalyzer: React.FC = () => {
             }
         ];
     };
+    
+    
+const AddressBar = () => {
+    const [showExamples, setShowExamples] = useState(false);
+    const inputRef = useRef<HTMLInputElement>(null);
+    const activityExamples = [
+        'beach day', 'hiking', 'picnic', 'wedding', 'outdoor concert',
+        'farming', 'construction', 'photography', 'camping', 'fishing',
+        'golf', 'running', 'cycling', 'gardening', 'street market'
+    ];
 
-    const AddressBar = () => {
-        return (
-            <div className="mb-8 p-4 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700">
+    const handleExampleClick = (example: string) => {
+        setActivity(example);
+        setShowExamples(false);
+        // Focus back on input after a tiny delay to ensure the click is processed
+        setTimeout(() => inputRef.current?.focus(), 10);
+    };
+
+    const handleClearActivity = () => {
+        setActivity('');
+        inputRef.current?.focus();
+    };
+
+    return (
+        <div className="mb-8 p-4 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700">
+            <div className="flex flex-col space-y-4">
+                {/* Location Button Row */}
                 <button
+                    type="button"
                     onClick={() => setIsModalOpen(true)}
                     className="flex items-center justify-between w-full text-left transition-colors"
                 >
@@ -187,17 +212,64 @@ export const ClimateTrendAnalyzer: React.FC = () => {
                             Location: {data?.location || "Select location to run analysis..."}
                         </span>
                     </div>
-
-                    <div
-                        className="ml-4 p-2 rounded-full text-blue-600 bg-blue-100 dark:bg-blue-700/30 hover:bg-blue-200 dark:hover:bg-blue-700 transition-colors flex items-center shadow-md"
-                        aria-label="Change Location and Date"
-                    >
-                        <MapPinIcon className="w-5 h-5" />
-                    </div>
+                    <MapPinIcon className="w-5 h-5 text-blue-600" />
                 </button>
+
+                {/* Activity Input Row */}
+                <div className="space-y-2">
+                    <div className="flex items-center space-x-3">
+                        <label htmlFor="activity-input" className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                            Activity:
+                        </label>
+                        <div className="flex-grow relative">
+                            <input
+                                ref={inputRef}
+                                id="activity-input"
+                                type="text"
+                                value={activity}
+                                onChange={(e) => setActivity(e.target.value)}
+                                onFocus={() => setShowExamples(true)}
+                                onBlur={() => setTimeout(() => setShowExamples(false), 150)} // Small delay to allow example clicks
+                                placeholder="What are you planning? (e.g., hiking, picnic, wedding...)"
+                                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                            />
+                            {activity && (
+                                <button
+                                    type="button"
+                                    onClick={handleClearActivity}
+                                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-lg w-6 h-6 flex items-center justify-center"
+                                    onMouseDown={(e) => e.preventDefault()} // Prevent input blur
+                                >
+                                    ×
+                                </button>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Activity Examples */}
+                    {showExamples && (
+                        <div className="flex flex-wrap gap-2 text-sm">
+                            <span className="text-gray-500 dark:text-gray-400">Examples:</span>
+                            {activityExamples.map((example) => (
+                                <button
+                                    key={example}
+                                    type="button"
+                                    className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                                    onMouseDown={(e) => {
+                                        e.preventDefault(); // CRITICAL: Prevent input blur
+                                        handleExampleClick(example);
+                                    }}
+                                >
+                                    {example}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                </div>
             </div>
-        );
-    };
+        </div>
+    );
+};
 
     return (
         <div className="container mx-auto p-0">
