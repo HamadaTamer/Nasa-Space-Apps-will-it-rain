@@ -6,12 +6,21 @@ router = APIRouter()
 
 @router.post("", response_model=ActivityResponse)
 async def predict_activity_endpoint(q: ActivityRequest) -> ActivityResponse:
+    
+    # predict activity is a function that calls the model and returns the prediction 
     out = predict_activity({
         "date": q.date.isoformat(),
         "lat": q.lat,
         "lon": q.lon,
         "activity": q.activity
     })
+
+    # add LLM part 
+
+
+
+
+
     return ActivityResponse(
         inputs=q,
         prediction=ActivityPrediction(**out)
