@@ -3,6 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "predev": "node scripts/downloadMap.js",
+    "prebuild": "node scripts/downloadMap.js",
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
@@ -11,8 +13,10 @@
   "dependencies": {
     "@heroicons/react": "^2.2.0",
     "@types/leaflet": "^1.9.20",
+    "fs-extra": "^11.3.2",
     "leaflet": "^1.9.4",
     "next": "15.5.4",
+    "node-fetch": "^2.7.0",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-leaflet": "^5.0.0",

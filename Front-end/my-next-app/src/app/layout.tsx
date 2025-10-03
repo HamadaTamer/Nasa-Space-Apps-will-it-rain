@@ -18,9 +18,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="h-full">
-      <body className="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen antialiased">
+      {/* Set body to flex container, occupying min-h-full to prevent overflow */}
+      <body className="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-full antialiased flex flex-col">
 
-        {/* Header/Navigation */}
+        {/* Header remains sticky at the top */}
         <header className={`${NASA_GRADIENT_CLASSES} text-white shadow-lg sticky top-0 z-10`}>
           <div className="container mx-auto px-6 py-4">
             <div className="flex items-center justify-between">
@@ -34,7 +35,7 @@ export default function RootLayout({
                 </div>
               </Link>
 
-              {/* Desktop Navigation - UPDATED */}
+              {/* Desktop Navigation */}
               <nav className="hidden md:flex space-x-8">
                 <NavLink href="/">Home</NavLink>
                 <NavLink href="/dashboard">Dashboard</NavLink>
@@ -51,13 +52,13 @@ export default function RootLayout({
           </div>
         </header>
 
-        {/* Main Content Area */}
-        <main className="p-0 md:p-0">
+        {/* Main Content Area: Use flex-grow to occupy all remaining vertical space */}
+        <main className="flex-grow p-0 md:p-0">
           {children}
         </main>
 
         {/* Footer */}
-        <footer className="bg-gray-800 text-white py-8 mt-12">
+        <footer className="bg-gray-800 text-white py-8">
           <div className="container mx-auto px-6 text-center">
             <p className="mb-2">Built for NASA Space Apps Challenge 2025</p>
             <p className="text-gray-400 text-sm">Data sources: NASA Earth Science Division, NOAA Climate Data</p>

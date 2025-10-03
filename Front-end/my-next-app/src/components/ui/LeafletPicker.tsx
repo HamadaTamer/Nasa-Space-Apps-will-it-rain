@@ -1,8 +1,19 @@
-// src/components/ui/LeafletPicker.tsx
+// src/components/ui/LeafletPicker.tsx (Global View and Interactivity Restored)
 
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
-import L from 'leaflet';
+import L, { LatLngExpression } from 'leaflet';
+
+// --- Global Configuration ---
+// Default center set to a neutral, central location (equator/prime meridian or default view)
+const GLOBAL_CENTER: LatLngExpression = [20.0, 0.0];
+const GLOBAL_ZOOM = 3; // Zoom level suitable for viewing a large area
+
+// Stadiamaps API Key (Used for reliable tile loading)
+const STADIAMAPS_API_KEY = '14510f48-3039-473e-ad5a-ae845e97d7ac';
+const STADIAMAPS_URL =
+    `https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}.png?api_key=${STADIAMAPS_API_KEY}`;
+
 
 // Custom Marker Icon Fix
 const customIcon = L.divIcon({
@@ -16,29 +27,31 @@ const customIcon = L.divIcon({
 interface LeafletPickerProps {
     initialCoords: { lat: number; lng: number };
     onSelectLocation: (lat: number, lng: number) => void;
-    isMapVisible: boolean; // Crucial prop for the render fix
+    isMapVisible: boolean;
 }
 
-// Internal component to handle map click events and force size invalidation
+// Internal component for interaction and size invalidation fix
 const LocationMarker: React.FC<{
-    markerPosition: L.LatLngExpression,
+    markerPosition: LatLngExpression,
     onMapClick: (e: L.LeafletMouseEvent) => void,
     isMapVisible: boolean
-}> = ({ markerPosition, onMapClick, isMapVisible }) => { // <-- onMapClick is destructured here
+}> = ({ markerPosition, onMapClick, isMapVisible }) => {
 
     const map = useMapEvents({
-        click: onMapClick, // <-- Correct usage: pass the function reference directly
+        click: onMapClick,
     });
 
-    // FIX: Invalidate map size when the component loads AND when visibility changes
+    // Aggressive size invalidation check when the component becomes visible
     useEffect(() => {
         if (isMapVisible) {
-            // Use a timeout to ensure the DOM has finished resizing the modal container
-            const timer = setTimeout(() => {
+            const frameId = requestAnimationFrame(() => {
                 map.invalidateSize();
-                map.setView(markerPosition, map.getZoom()); // Re-center after size change
-            }, 50); // Small delay is often enough
-            return () => clearTimeout(timer);
+                map.setView(markerPosition, map.getZoom());
+            });
+
+            return () => {
+                cancelAnimationFrame(frameId);
+            };
         }
     }, [map, isMapVisible, markerPosition]);
 
@@ -49,7 +62,11 @@ const LocationMarker: React.FC<{
 
 
 export const LeafletPicker: React.FC<LeafletPickerProps> = ({ initialCoords, onSelectLocation, isMapVisible }) => {
-    const [markerPosition, setMarkerPosition] = useState<L.LatLngExpression>(initialCoords);
+    // Note: We use the initialCoords from props for the marker position to ensure continuity
+    const [markerPosition, setMarkerPosition] = useState<LatLngExpression>([initialCoords.lat, initialCoords.lng]);
+
+    // Center the map on the user's last known location (initialCoords) instead of a fixed global point
+    const mapCenter: LatLngExpression = useMemo(() => [initialCoords.lat, initialCoords.lng], [initialCoords.lat, initialCoords.lng]);
 
     const onMapClick = useCallback((e: L.LeafletMouseEvent) => {
         const lat = e.latlng.lat;
@@ -59,26 +76,34 @@ export const LeafletPicker: React.FC<LeafletPickerProps> = ({ initialCoords, onS
         onSelectLocation(lat, lng);
     }, [onSelectLocation]);
 
-    const center: L.LatLngTuple = useMemo(() => [initialCoords.lat, initialCoords.lng], [initialCoords]);
 
     return (
-        <div className="h-96 w-full rounded-lg overflow-hidden border-2 border-blue-400">
+        <div className="h-full w-full rounded-lg overflow-hidden map-container">
             <MapContainer
-                center={center}
-                zoom={10}
+                // Set initial view to the last selected coordinate (Global functionality)
+                center={mapCenter}
+                zoom={GLOBAL_ZOOM}
                 scrollWheelZoom={true}
+                // --- REMOVED: maxBounds, minZoom, maxBoundsViscosity ---
                 style={{ height: '100%', width: '100%', zIndex: 0 }}
-                className="map-container"
             >
+                {/* Stadiamaps Tile Layer */}
                 <TileLayer
-                    attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    attribution='&copy; <a href="https://stadiamaps.com/">Stadia Maps</a> contributors'
+                    url={STADIAMAPS_URL}
+                    maxZoom={20}
                 />
+
                 <LocationMarker
                     markerPosition={markerPosition}
                     onMapClick={onMapClick}
                     isMapVisible={isMapVisible}
                 />
+
+                {/* Overlay to hint at interaction */}
+                <div className="absolute inset-0 z-10 pointer-events-none flex items-end justify-center pb-2">
+                    <span className="bg-black/60 text-white text-sm px-3 py-1 rounded-full">Click anywhere to set location (Global Coverage) 🌍</span>
+                </div>
             </MapContainer>
         </div>
     );
