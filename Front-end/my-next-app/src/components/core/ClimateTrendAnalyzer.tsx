@@ -24,6 +24,7 @@ const initialData: ClimateData = {
     conditions: dummyConditions,
 };
 // --------------------
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "http://127.0.0.1:8000";
 
 
 export const ClimateTrendAnalyzer: React.FC = () => {
@@ -32,21 +33,37 @@ export const ClimateTrendAnalyzer: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false); // Modal state
 
-    // Function to run the analysis
-    const runAnalysis = useCallback((loc: string, dt: string) => {
-        setLoading(true);
-        // Simulate API call using current URL data
-        setTimeout(() => {
-            setData({
-                ...initialData,
-                location: loc,
-                date: dt,
-                summary: `Analysis for ${loc} on ${dt}: Climate risks assessed using NASA data.`
-            });
-            setLoading(false);
-        }, 1500);
-    }, []);
-
+  const runAnalysis = useCallback((loc: string, dt: string) => {
+  setLoading(true);
+  
+  fetch(`${API_BASE}/api/v1/analyze`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      location: loc,        // e.g. "Cairo, Egypt (30.0444, 31.2357)"
+      date: dt,             // e.g. "July 15, 2026"
+      activity: "picnic"    // or pass whatever you collect elsewhere
+    })
+  })
+  .then(async (res) => {
+    if (!res.ok) throw new Error(`API ${res.status}`);
+    const json = await res.json(); // <- already ClimateData shape
+    setData(json);
+  })
+  .catch((e) => {
+    console.error(e);
+    // fallback: keep your previous placeholder behavior if you want
+    setData({
+      ...initialData,
+      location: loc,
+      date: dt,
+      summary: `Analysis for ${loc} on ${dt}: (fallback placeholder)`,
+      conditions: initialData.conditions
+    });
+  })
+  .finally(() => setLoading(false));
+}, []);
+ 
 
     // Custom 'Address Bar' now directs to the full-screen map picker
     const AddressBar = () => {
