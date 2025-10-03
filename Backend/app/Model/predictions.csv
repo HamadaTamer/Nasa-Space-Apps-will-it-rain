@@ -1,0 +1,2 @@
+prediction_id,year,latitude,longitude,month,predicted_humidity,predicted_temperature,predicted_wind_speed,predicted_rain,rain_confidence,prediction_timestamp
+1,2024,22.0,25.625,6,15.922540664672852,30.8753719329834,3.105848550796509,No Rain,0.8933393955230713,2025-10-03T17:09:33.503985
