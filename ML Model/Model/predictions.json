@@ -1,0 +1,32 @@
+{
+  "metadata": {
+    "export_date": "2025-10-03T17:09:33.510255",
+    "total_predictions": 1,
+    "model_version": "1.0",
+    "output_files": [
+      "predictions.csv",
+      "predictions.json"
+    ]
+  },
+  "predictions": [
+    {
+      "input": {
+        "year": 2024,
+        "latitude": 22.0,
+        "longitude": 25.625,
+        "month": 6
+      },
+      "predictions": {
+        "humidity": 15.922540664672852,
+        "temperature": 30.8753719329834,
+        "wind_speed": 3.105848550796509,
+        "rain": "No Rain",
+        "rain_confidence": 0.8933393955230713
+      },
+      "metadata": {
+        "prediction_timestamp": "2025-10-03T17:09:33.503985",
+        "model_loaded": true
+      }
+    }
+  ]
+}
