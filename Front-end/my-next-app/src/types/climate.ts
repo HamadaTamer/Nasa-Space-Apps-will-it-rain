@@ -2,10 +2,10 @@
 
 export interface Condition {
     name: 'Heavy Rain' | 'Extreme Heat' | 'High Winds' | 'Discomfort Index';
-    historical: number;      // Historical baseline probability (%)
-    trendAdjusted: number;   // Trend-adjusted probability (%)
-    mlProjection: number;    // ML-informed projection probability (%)
-    icon: string;            // Emoji or icon class for the condition
+    rainType?: 'No Rain' | 'Light Rain' | 'Drizzle' | 'Heavy Rain'; 
+    confidence: number;
+    temperature: number;
+    windSpeed: number;      
 }
 
 export interface ClimateData {
