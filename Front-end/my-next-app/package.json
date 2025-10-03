@@ -3,8 +3,6 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "predev": "node scripts/downloadMap.js",
-    "prebuild": "node scripts/downloadMap.js",
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
@@ -12,6 +10,7 @@
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
+    "@react-google-maps/api": "^2.20.7",
     "@types/leaflet": "^1.9.20",
     "fs-extra": "^11.3.2",
     "leaflet": "^1.9.4",
