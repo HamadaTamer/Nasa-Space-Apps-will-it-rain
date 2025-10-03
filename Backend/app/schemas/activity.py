@@ -1,20 +1,21 @@
+# app/schemas/activity.py
 from datetime import date
 from pydantic import BaseModel, Field
+from typing import Optional
 
 class ActivityRequest(BaseModel):
     date: date
     lat: float = Field(..., ge=-90, le=90)
     lon: float = Field(..., ge=-180, le=180)
-    activity: str = Field(..., min_length=1, max_length=200)
+    activity: str
 
 class ActivityPrediction(BaseModel):
-    humidity: float        # %
-    temperature: float     # °C
-    rain: str              # e.g., "Rained", "No Rain"
-    wind_speed: float      # m/s
-    rain_confidence: float | None = None
+    humidity: float
+    temperature: float
+    rain: str
+    wind_speed: float
+    rain_confidence: float  
 
 class ActivityResponse(BaseModel):
     inputs: ActivityRequest
     prediction: ActivityPrediction
-    meta: dict = {}
