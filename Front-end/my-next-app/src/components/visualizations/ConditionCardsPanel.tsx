@@ -23,7 +23,7 @@ const ConditionCard: React.FC<{ condition: Condition }> = ({ condition }) => {
                     <span className="font-semibold text-blue-600 dark:text-blue-400">Trend-Adjusted:</span> {condition.trendAdjusted}%
                 </p>
                 <p className="text-sm text-gray-700 dark:text-gray-300">
-                    <span className="font-semibold">ML Projection:</span> {condition.mlProjection}% (Optional)
+                    <span className="font-semibold">ML Projection:</span> {condition.mlProjection}%
                 </p>
             </div>
         </div>
