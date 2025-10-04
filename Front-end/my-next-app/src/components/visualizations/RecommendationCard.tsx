@@ -19,7 +19,7 @@ interface RecommendationCardProps {
   humidity: number; // Added humidity prop for accurate display
 }
 
-// Function to determine overall suitability based on rain confidence
+// --- HELPER FUNCTION DEFINITION (MUST BE PLACED BEFORE THE MAIN COMPONENT) ---
 const getSuitability = (confidence: number) => {
   const risk = confidence * 100;
 
@@ -49,6 +49,7 @@ const getSuitability = (confidence: number) => {
     };
   }
 };
+// -----------------------------------------------------------------------------
 
 const MetricBlock: React.FC<{
   icon: React.ElementType;
@@ -72,13 +73,11 @@ export const RecommendationCard: React.FC<RecommendationCardProps> = ({
   windSpeed,
   humidity,
 }) => {
+  // FIX: getSuitability is now accessible because it's defined above
   const suitability = getSuitability(rainConfidence);
   const rainPercent = (rainConfidence * 100).toFixed(0);
 
-  // Determine the main weather icon for the top corner
   const weatherIcon = rainConfidence > 0.5 ? CloudIcon : SunIcon;
-
-  // --- NEW GRADIENT CLASSES ---
   const ANALYSIS_GRADIENT_CLASSES =
     "bg-gradient-to-br from-blue-800 via-blue-600 to-blue-400";
 
@@ -106,10 +105,7 @@ export const RecommendationCard: React.FC<RecommendationCardProps> = ({
         </div>
 
         {/* Metrics Banner */}
-        <div
-          className
-          className="grid grid-cols-4 gap-4 bg-black/20 rounded-lg p-2"
-        >
+        <div className="grid grid-cols-4 gap-4 bg-black/20 rounded-lg p-2">
           <MetricBlock
             icon={SunIcon}
             value={`${temperature.toFixed(1)}°C`}
@@ -130,27 +126,6 @@ export const RecommendationCard: React.FC<RecommendationCardProps> = ({
             value={`${rainPercent}%`}
             label="Confidence"
           />
-        </div>
-      </div>
-
-      {/* 2. SUITABILITY ADVICE PANEL */}
-      <div
-        className={`p-5 rounded-xl shadow-lg border-l-8 border-t-2 border-gray-100 ${suitability.color.replace(
-          "text-",
-          "border-"
-        )} bg-white dark:bg-gray-800`}
-      >
-        <div className="flex items-center space-x-4">
-          <suitability.icon className={`w-8 h-8 ${suitability.color}`} />
-          <div>
-            <p className="text-xl font-bold text-gray-800 dark:text-gray-100">
-              Overall Suitability:{" "}
-              <span className={suitability.color}>{suitability.status}</span>
-            </p>
-            <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
-              {suitability.advice}
-            </p>
-          </div>
         </div>
       </div>
     </div>
