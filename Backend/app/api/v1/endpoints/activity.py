@@ -30,7 +30,8 @@ async def predict_activity_endpoint(q: ActivityRequest) -> ActivityResponse:
             "wind_speed": out["wind_speed"]
         },
         "response_mode": "blocking",
-        "query": "weather report"
+        "query": "weather report",
+        "user": "hamada"
     }
 
     headers = {

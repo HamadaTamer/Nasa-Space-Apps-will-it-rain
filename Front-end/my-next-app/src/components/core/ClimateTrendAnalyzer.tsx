@@ -1,33 +1,36 @@
+// src/components/core/ClimateTrendAnalyzer.tsx
+
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { SummaryPanel } from "../visualizations/SummaryPanel";
 import { RiskGaugesPanel } from "../visualizations/RiskGaugesPanel";
-import { DownloadOptions } from "../ui/DownloadOptions";
+import { RecommendationCard } from "../visualizations/RecommendationCard";
+import { DownloadOptions } from "../ui/DownloadOptions"; // Moved to bottom
 import { LocationModal } from "../ui/LocationModal";
 import { MagnifyingGlassIcon, MapPinIcon } from "@heroicons/react/24/outline";
 import { ClimateData, Condition } from "../../types/climate";
+import { WeatherDetailsCard } from "../visualizations/WeatherDetailsCard"; // Ensure this is imported
 
-// --- Updated Dummy Data to match your Condition type ---
+// --- DUMMY DATA DEFINITION (Must be at the top level) ---
 const dummyConditions: Condition[] = [
   {
     name: "Heavy Rain",
-    rainType: "Heavy Rain",
-    confidence: 0.3,
-    temperature: 25,
-    windSpeed: 15,
+    icon: "🌧️",
+    historical: 22,
+    trendAdjusted: 28,
+    mlProjection: 30,
   },
   {
     name: "Extreme Heat",
-    rainType: "No Rain",
-    confidence: 0.18,
-    temperature: 38,
-    windSpeed: 8,
+    icon: "🔥",
+    historical: 10,
+    trendAdjusted: 15,
+    mlProjection: 18,
   },
   {
     name: "High Winds",
-    rainType: "Light Rain",
-    confidence: 0.1,
-    temperature: 20,
-    windSpeed: 25,
+    icon: "🌬️",
+    historical: 5,
+    trendAdjusted: 4,
+    mlProjection: 3,
   },
 ];
 
@@ -35,17 +38,18 @@ const initialData: ClimateData = {
   location: "Cairo, Egypt (30.0444, 31.2357)",
   date: "July 15, 2026",
   summary:
-    "On July 15 in Cairo, expect heavy rain with 30% confidence, temperature around 25°C, and wind speed of 15 km/h.",
+    "On July 15 in Cairo, the climate-adjusted chance of heavy rain is 28%, and extreme heat has a 15% adjusted probability.",
   conditions: dummyConditions,
 };
-// --------------------
+// -----------------------------------------------------------
+
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "http://127.0.0.1:8000";
 
-// Interface for the activity endpoint response
+// Interface for the activity endpoint response (Backend structure)
 interface ActivityPrediction {
   humidity: number;
   temperature: number;
-  rain: string;
+  rain: "No Rain" | "Light Rain" | "Heavy Rain";
   wind_speed: number;
   rain_confidence: number;
   input_year: number;
@@ -62,6 +66,21 @@ interface ActivityResponse {
     activity: string;
   };
   prediction: ActivityPrediction;
+  analysis_summary?: string;
+}
+
+// Interface for Condition with all required UI props
+interface BackendCondition extends Condition {
+  historical: number;
+  trendAdjusted: number;
+  mlProjection: number;
+  icon: string;
+  // Props needed for RecommendationCard and enhanced gauges
+  rainType: string;
+  confidence: number;
+  temperature: number;
+  windSpeed: number;
+  humidity: number; // Added humidity here for consistency
 }
 
 interface AddressBarProps {
@@ -208,23 +227,24 @@ const AddressBar: React.FC<AddressBarProps> = ({
   );
 };
 
+// --- MAIN COMPONENT STARTS HERE ---
 export const ClimateTrendAnalyzer: React.FC = () => {
   const [data, setData] = useState<ClimateData | null>(initialData);
   const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [rawApiResponse, setRawApiResponse] = useState<any>(null); // Store raw API response
+  const [rawApiResponse, setRawApiResponse] = useState<ActivityResponse | null>(
+    null
+  );
   const [activity, setActivity] = useState("outdoor activities"); // Default activity
 
   const runAnalysis = useCallback(
     (loc: string, dt: string, lat?: number, lon?: number) => {
       setLoading(true);
 
-      // Extract coordinates from location string if not provided directly
       let latitude = lat;
       let longitude = lon;
 
       if (!latitude || !longitude) {
-        // Try to extract coordinates from location string like "Cairo, Egypt (30.0444, 31.2357)"
         const coordMatch = loc.match(/\(([-\d.]+),\s*([-\d.]+)\)/);
         if (coordMatch) {
           latitude = parseFloat(coordMatch[1]);
@@ -242,7 +262,7 @@ export const ClimateTrendAnalyzer: React.FC = () => {
       const dateObj = new Date(dt);
       const isoDate = dateObj.toISOString().split("T")[0];
 
-      // Call the activity endpoint directly
+      // Call the activity endpoint
       fetch(`${API_BASE}/api/v1/activity`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -263,7 +283,9 @@ export const ClimateTrendAnalyzer: React.FC = () => {
           const transformedData: ClimateData = {
             location: loc,
             date: dt,
-            summary: generateSummary(response.prediction, loc, dt),
+            summary:
+              response.analysis_summary ||
+              generateSummary(response.prediction, loc, dt),
             conditions: transformPredictionToConditions(response.prediction),
           };
 
@@ -271,7 +293,7 @@ export const ClimateTrendAnalyzer: React.FC = () => {
         })
         .catch((e) => {
           console.error("API call failed:", e);
-          setRawApiResponse(null); // Clear raw response on error
+          setRawApiResponse(null);
 
           // Fallback to dummy data
           setData({
@@ -304,32 +326,50 @@ export const ClimateTrendAnalyzer: React.FC = () => {
   // Helper function to transform prediction to conditions
   const transformPredictionToConditions = (
     prediction: ActivityPrediction
-  ): Condition[] => {
+  ): BackendCondition[] => {
+    const rainChance = Math.round(prediction.rain_confidence * 100);
+
     return [
       {
         name: "Heavy Rain",
-        rainType: prediction.rain as "No Rain" | "Light Rain" | "Heavy Rain",
+        rainType: prediction.rain,
         confidence: prediction.rain_confidence,
         temperature: prediction.temperature,
         windSpeed: prediction.wind_speed,
+        humidity: prediction.humidity,
+        icon: "🌧️",
+        historical: 20,
+        trendAdjusted: 30,
+        mlProjection: rainChance,
       },
       {
         name: "Extreme Heat",
-        rainType: "No Rain", // Default for heat condition
-        confidence: 0, // Not applicable for heat
+        rainType: "No Rain",
+        confidence: 0,
         temperature: prediction.temperature,
         windSpeed: prediction.wind_speed,
+        humidity: prediction.humidity,
+        icon: "🔥",
+        historical: 10,
+        trendAdjusted: 15,
+        mlProjection: prediction.temperature > 35 ? 70 : 15,
       },
       {
         name: "High Winds",
-        rainType: "No Rain", // Default for wind condition
-        confidence: 0, // Not applicable for wind
+        rainType: "No Rain",
+        confidence: 0,
         temperature: prediction.temperature,
         windSpeed: prediction.wind_speed,
+        humidity: prediction.humidity,
+        icon: "🌬️",
+        historical: 5,
+        trendAdjusted: 4,
+        mlProjection: prediction.wind_speed > 20 ? 85 : 5,
       },
     ];
   };
 
+  // --- Main Render ---
   return (
     <div className="container mx-auto p-0">
       <AddressBar
@@ -348,14 +388,67 @@ export const ClimateTrendAnalyzer: React.FC = () => {
         </div>
       )}
 
-      {data && !loading ? (
-        <div className="space-y-10 fade-in">
-          <SummaryPanel data={data} />
-          <RiskGaugesPanel conditions={data.conditions} />
+      {data && !loading && rawApiResponse ? (
+        <div className="space-y-8 fade-in">
+          {/* 1. TOP BANNER (Recommendation Card) */}
+          <RecommendationCard
+            activity={activity}
+            summary={rawApiResponse.analysis_summary || data.summary}
+            rainConfidence={rawApiResponse.prediction.rain_confidence}
+            temperature={rawApiResponse.prediction.temperature}
+            windSpeed={rawApiResponse.prediction.wind_speed}
+            humidity={rawApiResponse.prediction.humidity}
+          />
+
+          {/* 2. MAIN 3-COLUMN GRID LAYOUT */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* LEFT COLUMN (COL SPAN 2): Weather Details & Trends */}
+            <div className="lg:col-span-2 space-y-8">
+              {/* LEFT-TOP: Weather Details (with Bars) */}
+              <WeatherDetailsCard
+                temperature={rawApiResponse.prediction.temperature}
+                humidity={rawApiResponse.prediction.humidity}
+                windSpeed={rawApiResponse.prediction.wind_speed}
+                rainConfidence={rawApiResponse.prediction.rain_confidence}
+              />
+
+              {/* LEFT-BOTTOM: Risk Gauges Panel (Detailed Risk) */}
+              <RiskGaugesPanel
+                conditions={data.conditions as BackendCondition[]}
+              />
+
+              {/* NOTE: TrendGraph component usage removed as requested. */}
+            </div>
+
+            {/* RIGHT COLUMN (COL SPAN 1): Recommendation and Download */}
+            <div className="lg:col-span-1 space-y-8">
+              {/* RIGHT-TOP: Narrative Summary and Actions (Based on image inspiration) */}
+              <div className="p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 border-b pb-2">
+                  Recommendation
+                </h3>
+                <p className="text-gray-700 dark:text-gray-300 italic mb-4">
+                  {rawApiResponse.analysis_summary || data.summary}
+                </p>
+
+                {/* Action Buttons */}
+                <button className="w-full text-white bg-blue-600 py-2 rounded-lg hover:bg-blue-700 mb-2">
+                  Share Recommendation
+                </button>
+                <button className="w-full text-blue-600 border border-blue-600 py-2 rounded-lg hover:bg-blue-50 dark:hover:bg-gray-700">
+                  Add to Calendar
+                </button>
+              </div>
+
+              {/* NOTE: DownloadOptions moved outside the grid */}
+            </div>
+          </div>
+
+          {/* 3. DOWNLOAD SECTION (At the bottom, spanning full width) */}
           <DownloadOptions
             location={data?.location || ""}
             date={data?.date || ""}
-            apiResponse={rawApiResponse} // Pass the raw API response
+            apiResponse={rawApiResponse}
           />
         </div>
       ) : (
